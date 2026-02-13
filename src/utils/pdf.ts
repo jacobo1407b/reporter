@@ -31,8 +31,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
     const opn = await getBase64ImageFromUrl(partnet.src)
 
     const groupedData = agruparPorSemana(data, client);
-    console.log(groupedData)
-
+    
     // Colors
     const lightBlue: [number, number, number] = [33, 92, 152]
     const white: [number, number, number] = [255, 255, 255]
@@ -287,7 +286,6 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
                 0: { fillColor: [33, 92, 152], textColor: [255, 255, 255], minCellHeight: 5 }, // Primera columna
                 1: { fillColor: [255, 255, 255], textColor: [33, 92, 152] }  // Segunda columna
             }
-
         });
         doc.addImage(es, "PNG", ejex + 165, ejey + 10, 27, 17);
         doc.addImage(grw, "PNG", ejex + 194, ejey + 10, 10, 17);
@@ -350,6 +348,14 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
             columnStyles: {
                 0: { cellWidth: 40 } // mínimo ancho para columna 0
             },
+            footStyles: {
+                fontStyle: 'bold',       // texto en negritas
+                fontSize: 8,            // tamaño de letra
+                fillColor: [255, 255, 255], // fondo blanco (RGB)
+                textColor: [0, 0, 0],    // texto negro (RGB)
+                halign: 'right'          // alineación horizontal
+            }
+
 
         });
     })
