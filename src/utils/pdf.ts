@@ -15,31 +15,28 @@ type DataExcel = {
     horas: number;
     fase: string;
 }
-type GroupExcel = {
-    registros: DataExcel[];
-    semana: number;
-    total: number;
-}
+
 
 const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 
 export const dataToPdf = async (data: DataExcel[], autorize: string, employe: string, signaturePreview: string, client: string) => {
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "letter" });
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const anio = new Date(data[0].fecha).getFullYear();
     const month = meses[new Date(data[0].fecha).getMonth()];
 
-    const groupedData: GroupExcel[] = agruparPorSemana(data);
-    const listDays = getWeekDatesSundayStart(anio, data[1].semana);
+    const itg = await getBase64ImageFromUrl(ITG.src);
+    const es = await getBase64ImageFromUrl(esr.src);
+    const grw = await getBase64ImageFromUrl(gr.src);
+    const opn = await getBase64ImageFromUrl(partnet.src)
 
+    const groupedData = agruparPorSemana(data, client);
+    console.log(groupedData)
 
     // Colors
-    const headerBlue: [number, number, number] = [33, 92, 152];
     const lightBlue: [number, number, number] = [33, 92, 152]
     const white: [number, number, number] = [255, 255, 255]
-    const black: [number, number, number] = [0, 0, 0]
     const darkGray: [number, number, number] = [33, 92, 152]
-    const borderColor: [number, number, number] = [0, 51, 102]
 
     // ===== PAGE 1: SUMMARY =====
     const margin = 20
@@ -54,7 +51,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
         { label: "Periodo", value: anio.toString() },
         { label: "Mes", value: month.toString() },
     ];
-    doc.addImage(await getBase64ImageFromUrl(ITG.src), "JPG", 34, margin + 1, 24, 14)
+    doc.addImage(itg, "JPG", 34, margin + 1, 24, 14)
     for (const item of infoData) {
         doc.setFillColor(...lightBlue)
         doc.rect(infoStartX, y, labelW, 5, "F")
@@ -77,12 +74,12 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
     }
 
     y += 8
-    doc.addImage(await getBase64ImageFromUrl(esr.src), "PNG", 180, margin + 1, 27, 17)
-    doc.addImage(await getBase64ImageFromUrl(gr.src), "PNG", 210, margin + 1, 10, 17)
+    doc.addImage(es, "PNG", 180, margin + 1, 27, 17)
+    doc.addImage(grw, "PNG", 210, margin + 1, 10, 17)
 
     // Summary table
     const summaryStartX = margin + 15
-    doc.addImage(await getBase64ImageFromUrl(partnet.src), "PNG", 21, summaryStartX, 45, 13)
+    doc.addImage(opn, "PNG", 21, summaryStartX, 45, 13)
     const headerClient = ["Cliente", client];
 
 
@@ -261,89 +258,102 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
         alternateRowStyles: { fillColor: [255, 255, 255] }
     });
 
-    doc.addPage();
-    let ejex = 19;
-    let ejey = 13;
-    doc.addImage(await getBase64ImageFromUrl(ITG.src), "JPG", ejex, ejey, 25.5, 14.2)
-    doc.addImage(await getBase64ImageFromUrl(partnet.src), "PNG", ejex - 9, ejey + 12, 41, 13.3)
+    groupedData.forEach((vl) => {
+        const listDays = getWeekDatesSundayStart(anio, vl.semana);
+        doc.addPage();
+        let ejex = 19;
+        let ejey = 13;
+        doc.addImage(itg, "JPG", ejex, ejey, 25.5, 14.2)
+        doc.addImage(opn, "PNG", ejex - 9, ejey + 12, 41, 13.3)
 
-    ejex += 36;
-    ejey -= 8;
-    autoTable(doc, {
-        head: [["", ""]],
-        tableWidth: 120,
-        headStyles: {
-            fillColor: [255, 255, 255],   // Fondo blanco
-        },
-        bodyStyles: {
-            font: "calibri",
-            fontSize: 10,
-            cellPadding: 0.5
-        },
+        ejex += 36;
+        ejey -= 8;
+        autoTable(doc, {
+            head: [["", ""]],
+            tableWidth: 120,
+            headStyles: {
+                fillColor: [255, 255, 255],   // Fondo blanco
+            },
+            bodyStyles: {
+                font: "calibri",
+                fontSize: 10,
+                cellPadding: 0.5
+            },
 
-        startY: ejey,
-        margin: { left: ejex },
-        body: [["Periodo", anio], ["Nombre Consultor", employe], ["Semana", "Semana 49"], ["Cliente", client], ["Proyecto", "Proyecto X"]],
-        columnStyles: {
-            0: { fillColor: [33, 92, 152], textColor: [255, 255, 255], minCellHeight: 5 }, // Primera columna
-            1: { fillColor: [255, 255, 255], textColor: [33, 92, 152] }  // Segunda columna
-        }
+            startY: ejey,
+            margin: { left: ejex },
+            body: [["Periodo", anio], ["Nombre Consultor", employe], ["Semana", `Semana ${vl.semana}`], ["Cliente", client], ["Proyecto", "Reingeniería Cadena de Suministro"]],
+            columnStyles: {
+                0: { fillColor: [33, 92, 152], textColor: [255, 255, 255], minCellHeight: 5 }, // Primera columna
+                1: { fillColor: [255, 255, 255], textColor: [33, 92, 152] }  // Segunda columna
+            }
 
-    });
-    doc.addImage(await getBase64ImageFromUrl(esr.src), "PNG", ejex + 165, ejey + 10, 27, 17);
-    doc.addImage(await getBase64ImageFromUrl(gr.src), "PNG", ejex + 194, ejey + 10, 10, 17);
+        });
+        doc.addImage(es, "PNG", ejex + 165, ejey + 10, 27, 17);
+        doc.addImage(grw, "PNG", ejex + 194, ejey + 10, 10, 17);
 
-    ejey += 30;
-    ejex += 180;
+        ejey += 30;
+        ejex += 180;
 
-    doc.setTextColor(...[33, 92, 152])
-    doc.setFontSize(10)
-    doc.setFont("calibri", "bold");
-    doc.text(month, ejex, ejey);
+        doc.setTextColor(...[33, 92, 152])
+        doc.setFontSize(10)
+        doc.setFont("calibri", "bold");
+        doc.text(month, ejex, ejey);
 
-    ejey += 2;
-    ejex -= 225;
-    const headerMes = listDays.map((d) => [d.dia]);
-    headerMes.unshift(["Reporte de Tiempos"])
+        ejey += 2;
+        ejex -= 230;
 
 
-    const tabla = generarTabla();
-    autoTable(doc, {
-        html: tabla,
-        styles: {
-            lineColor: [0, 0, 0],   // color de línea (negro)
-            lineWidth: 0.2,         // grosor de la línea
-            halign: "center",
-            valign: "middle",
-        },
-    });
+        const tabla = generarTabla(listDays, vl);
+        autoTable(doc, {
+            startY: ejey,
+            margin: { left: ejex },
+            html: tabla,
+            styles: {
+                lineColor: [0, 0, 0],   // color de línea (negro)
+                lineWidth: 0.2,
+                valign: "middle",
+                halign: "center",
+                cellPadding: 0.1
+            },
+            headStyles: {
+                cellPadding: 0.1,
+                fontSize: 8
+            },
+            bodyStyles: {
+                minCellHeight: 4
+            },
+            didParseCell: (data) => {
+                if (data.section === "head" && data.row.index === 0) {
+                    // Primer header
+                    data.cell.styles.fillColor = [33, 92, 152]; // tu RGB aquí
+                    data.cell.styles.textColor = [255, 255, 255];
+                    data.cell.styles.halign = "center"
+                }
+                if (data.section === "head" && data.row.index === 1) {
+                    // Primer header
+                    data.cell.styles.fillColor = [45, 125, 206]; // tu RGB aquí
+                    data.cell.styles.textColor = [255, 255, 255];
+                    data.cell.styles.halign = "center"
 
-    /*autoTable(doc, {
-        head: [headerMes],
-        headStyles: {
-            font: "calibri",
-            fillColor: [33, 92, 152],
-            textColor: [255, 255, 255],
-            halign: "center",
-            fontStyle: "bold",
-            fontSize: 9,
-            cellPadding: { right: 0, left: 0 },
-            lineWidth: 0.2,
-            lineColor: [0, 0, 0]
-        } as any,
-        columnStyles: {
-            0: { cellWidth: 246, minCellWidth: 246 },  // Columna "Reporte de Tiempos" más ancha
-            1: { cellWidth: 1, minCellWidth: 1 },
-            2: { cellWidth: 1, minCellWidth: 1 },
-            3: { cellWidth: 1, minCellWidth: 1 },
-            4: { cellWidth: 1, minCellWidth: 1 },
-            5: { cellWidth: 1, minCellWidth: 1 },
-            6: { cellWidth: 1, minCellWidth: 1 },
-            7: { cellWidth: 1, minCellWidth: 1 }
-        },
-        startY: ejey,
-        margin: { left: ejex }
-    })*/
+                }
+                if (data.section === "body") {
+                    data.cell.styles.fillColor = [255, 255, 255]; // blanco
+                    data.cell.styles.textColor = [0, 0, 0];       // negro
+                    data.cell.styles.fontSize = 6;
+                    data.cell.styles.fontStyle = "normal";
+                    if (data.column.index === 4 || data.column.index === 1) {
+                        data.cell.styles.halign = "left";
+                    }
+                }
+            },
+            columnStyles: {
+                0: { cellWidth: 40 } // mínimo ancho para columna 0
+            },
+
+        });
+    })
+
 
     doc.save("reporte_consultoria.pdf");
 

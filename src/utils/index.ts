@@ -1,3 +1,4 @@
+import { number } from "framer-motion";
 import * as XLSX from "xlsx";
 type DataExcel = {
     fecha: number;
@@ -13,6 +14,22 @@ type DiaSemana = {
     mes: number;   // número de mes (1-12)
     letra: string; // letra del día (D, L, M, X, J, V, S)
 };
+
+type GroupExcel = {
+    registros: DataExcel[];
+    semana: number;
+    total: number;
+}
+
+interface Actividad {
+    fecha: number;
+    semana: number;
+    tiket: string;
+    proyecto: string;
+    description: string;
+    horas: number;
+    fase: string;
+}
 
 function getISOWeek(date: Date): number {
     const tmp = new Date(date.getTime());
@@ -91,26 +108,57 @@ export async function getBase64ImageFromUrl(url: string): Promise<string> {
     });
 }
 
-export function agruparPorSemana(data: DataExcel[]) {
+function generarFila(actividad: Actividad, cliente: string, proyect: string): any {
+    const fecha = new Date(actividad.fecha);
+    const diaSemana = fecha.getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+
+    const dias = ["", "", "", "", "", "", ""]; // [D, L, M, M, J, V, S]
+
+    dias[diaSemana] = actividad.horas.toString();
+
+    return {
+        dia: diaSemana,
+        data: [
+            cliente,        // Cliente
+            proyect,
+            actividad.fase,                             // Fase
+            actividad.tiket,                            // Num Ticket
+            actividad.description,                      // Tarea/Actividad
+            ...dias,                                    // D, L, M, M, J, V, S
+            actividad.horas                             // Total
+        ]
+    }
+}
+export function agruparPorSemana(data: DataExcel[], cliente: string) {
     const agrupado = data.reduce((acc, item) => {
         // Si no existe la semana en el acumulador, la inicializamos
         if (!acc[item.semana]) {
             acc[item.semana] = {
                 semana: item.semana,
                 registros: [],
+                horasPorDia: Array(7).fill(0),
                 total: 0
             };
         }
-
+        ;
         // Agregamos el registro y sumamos las horas
-        acc[item.semana].registros.push(item);
+        acc[item.semana].registros.push(generarFila(item, cliente, "Reingeniería Cadena de Suministro"));
         acc[item.semana].total += item.horas;
+        const diaIndex = new Date(item.fecha).getDay(); // 0=domingo ... 6=sábado
+        acc[item.semana].horasPorDia[diaIndex] += item.horas;
 
         return acc;
-    }, {} as Record<number, { semana: number; registros: DataExcel[]; total: number }>);
+    }, {} as Record<number, { semana: number; registros: any; horasPorDia: Array<number>; total: number }>);
 
-    // Convertimos el objeto en array para recorrerlo más fácil
-    return Object.values(agrupado).sort((a, b) => a.semana - b.semana);
+
+
+    return Object.values(agrupado).sort((a, b) => a.semana - b.semana).map((v) => {
+        const reg = v.registros.sort((a: any, b: any) => a.dia - b.dia).map((r: any) => r.data)
+        return {
+            ...v,
+            registros: reg
+        }
+    })
 
 }
 
@@ -150,11 +198,11 @@ export function getWeekDatesSundayStart(year: number, weekNumber: number): DiaSe
 }
 
 
-export function generarTabla(): HTMLTableElement {
+export function generarTabla(listDays: DiaSemana[], body: { semana: number; registros: Array<Array<string>>; horasPorDia: number[]; total: number }): HTMLTableElement {
     const table = document.createElement("table");
     table.style.borderCollapse = "collapse";
     table.style.width = "100%";
-    
+
 
     // --- THEAD ---
     const thead = document.createElement("thead");
@@ -177,14 +225,13 @@ export function generarTabla(): HTMLTableElement {
 
 
     rowTitulo.appendChild(tdTitulo);
-    
-    const dias = ["30", "01", "02", "03", "04", "05", "06", ""];
-    dias.forEach((dia, idx) => {
+
+    listDays.forEach((dia) => {
         const td = document.createElement("td");
-        td.textContent = dia;
+        td.textContent = dia.dia;
         td.style.borderLeft = "1px solid black";
-        td.style.backgroundColor = "#215C98";
-        
+        td.style.backgroundColor = "#174a7d";
+
         td.style.color = "#fff";
         td.style.fontWeight = "bold";
         td.style.textAlign = "center";
@@ -203,17 +250,10 @@ export function generarTabla(): HTMLTableElement {
         "Proyecto",
         "Fase",
         "Num Ticket",
-        "Tarea/Actividad",
-        "D",
-        "L",
-        "M",
-        "M",
-        "J",
-        "V",
-        "S",
-        "Total"
+        ".......................Tarea/Actividad.............................",
+        ...listDays.map((x) => x.letra)
     ];
-    headers.forEach((h, idx) => {
+    headers.forEach((h) => {
         const th = document.createElement("td");
         th.textContent = h;
         th.style.backgroundColor = "#215C98";
@@ -229,32 +269,54 @@ export function generarTabla(): HTMLTableElement {
     table.appendChild(thead);
 
     // --- TBODY ---
-    /*const tbody = document.createElement("tbody");
+    const tbody = document.createElement("tbody");
 
     // Una sola fila de datos (hardcodeada)
-    const row = document.createElement("tr");
-    const datos = [
-        "Toks",
-        "Reingeniería Cadena de Suministro",
-        "Desarrollo",
-        "#001731",
-        "Ajuste y análisis integración 011 para bajar la categoría de artículo e insertar en la tabla de pedidos",
-        "8",
-        "8",
-        "8",
-        "24"
-    ];
-    datos.forEach((d) => {
-        const td = document.createElement("td");
-        td.textContent = d;
-        td.style.textAlign = "center";
-        td.style.padding = "4px";
-        td.style.fontFamily = "Calibri";
-        td.style.fontSize = "10px";
-        row.appendChild(td);
+    body.registros.forEach((bf) => {
+        const row = document.createElement("tr");
+        bf.forEach((d) => {
+            const td = document.createElement("td");
+            td.textContent = d;
+            td.style.textAlign = "center";
+            td.style.padding = "4px";
+            td.style.fontFamily = "Calibri";
+            td.style.fontSize = "10px";
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
     });
-    tbody.appendChild(row);
-    table.appendChild(tbody);*/
+    table.appendChild(tbody);
+
+    // --- TFOOT ---
+    const tfoot = document.createElement("tfoot");
+    const rowFooter = document.createElement("tr");
+    // Celda del footer
+
+
+    // Finalmente agregamos el footer a la tabla
+    const fother = [
+        "",
+        "",
+        "",
+        "",
+        "Total",
+        ...body.horasPorDia,
+        body.total
+    ];
+    fother.forEach((v, i) => {
+        const tdFooter = document.createElement("td");
+        tdFooter.textContent = v !== 0 ? v.toString() : "";
+        tdFooter.style.textAlign = i === 4 ? "right" : "center";
+        tdFooter.style.fontFamily = "Calibri";
+        tdFooter.style.fontSize = "7px";
+        rowFooter.appendChild(tdFooter);
+    });
+    tfoot.appendChild(rowFooter);
+    table.appendChild(tfoot);
+
+
+
+
 
     return table;
 }
