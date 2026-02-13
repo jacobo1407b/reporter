@@ -31,7 +31,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
     const opn = await getBase64ImageFromUrl(partnet.src)
 
     const groupedData = agruparPorSemana(data, client);
-    
+
     // Colors
     const lightBlue: [number, number, number] = [33, 92, 152]
     const white: [number, number, number] = [255, 255, 255]
@@ -336,21 +336,34 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
 
                 }
                 if (data.section === "body") {
-                    data.cell.styles.fillColor = [255, 255, 255]; // blanco
+                    data.cell.styles.fillColor = data.column.index === 5 || data.column.index === 11 ? [217, 217, 217] : [255, 255, 255]; // blanco
                     data.cell.styles.textColor = [0, 0, 0];       // negro
-                    data.cell.styles.fontSize = 6;
+                    data.cell.styles.fontSize = 7;
                     data.cell.styles.fontStyle = "normal";
                     if (data.column.index === 4 || data.column.index === 1) {
                         data.cell.styles.halign = "left";
                     }
                 }
+                if (data.section === "foot") {
+                    if (data.column.index > 4) {
+                        data.cell.styles.halign = "center";
+                    } else {
+                        data.cell.styles.lineColor = [0, 0, 0]
+                        data.cell.styles.lineWidth = {
+                            top: 0.3         // borde izquierdo
+                        }
+
+                    }
+                }
             },
             columnStyles: {
-                0: { cellWidth: 40 } // mínimo ancho para columna 0
+                0: { cellWidth: 12 },// mínimo ancho para columna 0
+                2: { cellWidth: 22 },
+                4: { cellWidth: 150 }
             },
             footStyles: {
                 fontStyle: 'bold',       // texto en negritas
-                fontSize: 8,            // tamaño de letra
+                fontSize: 7,            // tamaño de letra
                 fillColor: [255, 255, 255], // fondo blanco (RGB)
                 textColor: [0, 0, 0],    // texto negro (RGB)
                 halign: 'right'          // alineación horizontal
