@@ -198,7 +198,7 @@ export function getWeekDatesSundayStart(year: number, weekNumber: number): DiaSe
 }
 
 
-export function generarTabla(listDays: DiaSemana[], body: { semana: number; registros: Array<Array<string>>; horasPorDia: number[]; total: number }): HTMLTableElement {
+export function generarTabla(listDays: DiaSemana[], body: { semana: number; registros: Array<Array<string>>; horasPorDia: number[]; total: number }, employe: string, aprove: string): HTMLTableElement {
     const table = document.createElement("table");
     table.style.borderCollapse = "collapse";
     table.style.width = "100%";
@@ -299,24 +299,41 @@ export function generarTabla(listDays: DiaSemana[], body: { semana: number; regi
         "",
         "",
         "",
-        "Total",
+        "Total...",
         ...body.horasPorDia,
         body.total
     ];
     fother.forEach((v, i) => {
         const tdFooter = document.createElement("td");
         tdFooter.textContent = v !== 0 ? v.toString() : "";
-        tdFooter.style.textAlign = i === 4 ? "right" : "center";
         tdFooter.style.fontFamily = "Calibri";
-        tdFooter.style.fontSize = "7px";
         rowFooter.appendChild(tdFooter);
     });
     tfoot.appendChild(rowFooter);
+    const signature = document.createElement("tr");
+    const tdSignature = document.createElement("td");
+    tdSignature.colSpan = 5;
+    tdSignature.textContent = ".";
+    signature.appendChild(tdSignature);
+    tfoot.appendChild(signature);
+
+
+    const ft = [{ sp: ".", text: "Elaboró", emp: employe }, { sp: ".", text: "Autorizó", emp: aprove }];
+
+    ft.forEach((v) => {
+        const otro = document.createElement("tr");
+        Object.keys(v).forEach((key: string) => {
+            const k = key as keyof typeof v;
+            const tdFooter = document.createElement("td");
+            if (key === "sp") tdFooter.colSpan = 3;
+            tdFooter.textContent = v[k];
+            otro.appendChild(tdFooter);
+        });
+
+        tfoot.appendChild(otro);
+    })
+
     table.appendChild(tfoot);
-
-
-
-
 
     return table;
 }

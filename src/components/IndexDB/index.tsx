@@ -47,7 +47,7 @@ export const RegistroProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const agregar = async (data: Omit<Registro, "id">) => {
     const db = await openDB();
-    const tx:any = db.transaction("registros", "readwrite");
+    const tx: any = db.transaction("registros", "readwrite");
     const store = tx.objectStore("registros");
     const registro: Registro = { id: 1, ...data };
     store.put(registro);
@@ -57,18 +57,30 @@ export const RegistroProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const actualizar = async (data: Partial<Omit<Registro, "id">>) => {
     const db = await openDB();
-    const tx:any = db.transaction("registros", "readwrite");
-    const store = tx.objectStore("registros");
-    const current = (await consultar()) || { id: 1, firma: null, nombreEmpleado: "", nombreCliente: "" };
+
+    // Primero consulta fuera de la transacción
+    const current = (await consultar()) || {
+      id: 1,
+      firma: null,
+      nombreEmpleado: "",
+      nombreCliente: ""
+    };
+
     const updated = { ...current, ...data };
+
+    // Ahora sí abre la transacción y guarda
+    const tx: any = db.transaction("registros", "readwrite");
+    const store = tx.objectStore("registros");
     store.put(updated);
-    await tx.done;
+
+    await tx.done; // esperar a que termine la transacción
     setRegistro(updated);
+
   };
 
   const eliminar = async () => {
     const db = await openDB();
-    const tx:any = db.transaction("registros", "readwrite");
+    const tx: any = db.transaction("registros", "readwrite");
     const store = tx.objectStore("registros");
     store.delete(1);
     await tx.done;

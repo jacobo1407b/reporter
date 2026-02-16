@@ -70,7 +70,7 @@ function Signal(props: SignalProps) {
             <Divider />
             <CardBody>
                 <UploadZone
-                    accept=".png,.jpg,.jpeg"
+                    accept=".png"
                     label="Firma digital"
                     description="Formatos aceptados: PNG, JPG (max 5MB)"
                     icon="image"

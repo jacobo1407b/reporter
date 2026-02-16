@@ -6,6 +6,8 @@ import gr from "@/assets/gr.png";
 import partnet from "@/assets/partner.png";
 import { getBase64ImageFromUrl, agruparPorSemana } from "@/utils";
 import { getWeekDatesSundayStart, generarTabla } from "@/utils";
+import { AptosNarrow } from "@/fonts/Aptos-Narrow-normal";
+
 type DataExcel = {
     fecha: number;
     semana: number;
@@ -21,7 +23,12 @@ const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 
 
 export const dataToPdf = async (data: DataExcel[], autorize: string, employe: string, signaturePreview: string, client: string) => {
+
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    doc.addFileToVFS("AptosNarrow.ttf", AptosNarrow);
+    doc.addFont("AptosNarrow.ttf", "aptosnarro", "normal");
+    doc.setFont("aptosnarro", "normal");
+
     const anio = new Date(data[0].fecha).getFullYear();
     const month = meses[new Date(data[0].fecha).getMonth()];
 
@@ -302,7 +309,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
         ejex -= 230;
 
 
-        const tabla = generarTabla(listDays, vl);
+        const tabla = generarTabla(listDays, vl, employe, autorize);
         autoTable(doc, {
             startY: ejey,
             margin: { left: ejex },
@@ -344,7 +351,9 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
                         data.cell.styles.halign = "left";
                     }
                 }
-                if (data.section === "foot") {
+                if (data.section === "foot" && data.row.index === 0) {
+                    data.cell.styles.fontSize = 9;
+                    data.cell.styles.valign = "middle"
                     if (data.column.index > 4) {
                         data.cell.styles.halign = "center";
                     } else {
@@ -354,6 +363,15 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
                         }
 
                     }
+                }
+                if (data.section === "foot" && data.row.index > 0) {
+                    data.cell.styles.cellPadding = data.row.index === 1 || data.row.index === 3 ? { top: 15 } : { top: 0.5 };
+                    data.cell.styles.fontSize = data.column.index === 0 ? 1 : 9;
+                    data.cell.styles.valign = "middle";
+                    data.cell.styles.halign = data.column.index === 0 ? "left" : "center";
+                    data.cell.styles.fontStyle = data.column.index === 0 ? "bold" : "normal";
+                    data.cell.styles.lineColor = [0, 0, 0];
+                    data.cell.styles.lineWidth = data.row.index === 3 && data.column.index == 1 ? { top: 0.2, bottom: 0.2 } : { top: 0, bottom: 0 }
                 }
             },
             columnStyles: {
@@ -368,12 +386,16 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
                 textColor: [0, 0, 0],    // texto negro (RGB)
                 halign: 'right'          // alineación horizontal
             }
-
-
         });
+        const tempDoc: any = doc;
+        const finalY = tempDoc.lastAutoTable.finalY; // ✅ este es el valor correcto
+        const x = 160
+        const y = finalY - 40;
+        doc.addImage(signaturePreview, "PNG", x, y, 20, 15);
     })
 
 
-    doc.save("reporte_consultoria.pdf");
+    doc.save(`Reporte Actividades ${month} ${anio} - ${employe}.pdf`);
 
 }
+
