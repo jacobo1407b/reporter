@@ -72,7 +72,7 @@ function Signal(props: SignalProps) {
                 <UploadZone
                     accept=".png"
                     label="Firma digital"
-                    description="Formatos aceptados: PNG, JPG (max 5MB)"
+                    description="Formatos aceptados: PNG (max 5MB)"
                     icon="image"
                     files={signatureFiles}
                     onFilesChange={handleSignatureChange}
