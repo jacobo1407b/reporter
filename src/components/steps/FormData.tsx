@@ -41,9 +41,10 @@ function FormData({ formData, setformData, isStep1Complete }: FormDataProps) {
         setformData({ ...formData, [name]: value })
     }
     const dateOnchange = (e: any) => {
+
         const { start, end } = e
-        const startDate = new Date(start.toString()).getTime();
-        const endDate = new Date(end.toString()).getTime();
+        const startDate = new Date(start.year, start.month - 1, start.day, 0, 0, 0).getTime();
+        const endDate = new Date(end.year, end.month - 1, end.day, 23, 59, 0).getTime();
         setformData({ ...formData, periodo: { start: startDate, end: endDate } })
     }
 
