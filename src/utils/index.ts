@@ -250,7 +250,7 @@ export function generarTabla(listDays: DiaSemana[], body: { semana: number; regi
         "Proyecto",
         "Fase",
         "Num Ticket",
-        ".......................Tarea/Actividad.............................",
+        "Tarea/Actividad",
         ...listDays.map((x) => x.letra)
     ];
     headers.forEach((h) => {
@@ -299,7 +299,7 @@ export function generarTabla(listDays: DiaSemana[], body: { semana: number; regi
         "",
         "",
         "",
-        "Total...",
+        "Total",
         ...body.horasPorDia,
         body.total
     ];

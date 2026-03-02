@@ -6,6 +6,7 @@ export interface Registro {
   id: number; // siempre 1
   firma: Blob | null;
   nombreEmpleado: string;
+  prsac: string;
   nombreCliente: string;
 }
 
@@ -63,6 +64,7 @@ export const RegistroProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       id: 1,
       firma: null,
       nombreEmpleado: "",
+      prsac: "",
       nombreCliente: ""
     };
 

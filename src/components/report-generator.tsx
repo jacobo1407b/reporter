@@ -17,6 +17,7 @@ type FormDataType = {
   cliente: string;
   proyecto: string;
   autorizo: string;
+  prsac: string;
   periodo: {
     start: number | null;
     end: number | null;
@@ -38,6 +39,7 @@ export function ReportGenerator() {
     name: "",
     cliente: "",
     proyecto: "Toks - Proyecto de reingeniería Cadena de Suministro",
+    prsac: "",
     autorizo: "Jose Rojas Hernandez",
     periodo: {
       start: null,
@@ -98,11 +100,13 @@ export function ReportGenerator() {
       await actualizar({
         nombreEmpleado: formData.name,
         nombreCliente: formData.cliente,
-        firma: signatureFiles[0]
+        firma: signatureFiles[0],
+        prsac: formData.prsac
       })
     } else {
       agregar({
         firma: signatureFiles[0],
+        prsac: formData.prsac,
         nombreEmpleado: formData.name,
         nombreCliente: formData.cliente
       })
@@ -113,7 +117,7 @@ export function ReportGenerator() {
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const dataExcel = await handlerReaFiles(excelFiles, formData.proyecto);
+      const dataExcel = await handlerReaFiles(excelFiles, formData.prsac);
       const dataFilter = dataExcel.filter((i) => i.fecha >= (formData.periodo.start ?? 0) && i.fecha <= (formData.periodo.end ?? Date.now()))
       dataToPdf(dataFilter, formData.autorizo, formData.name, signaturePreview || "", formData.cliente);
 
@@ -134,8 +138,9 @@ export function ReportGenerator() {
             <Clock className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-balance text-2xl font-bold text-foreground sm:text-3xl">
+            <h1 className="flex items-baseline gap-2 text-balance text-2xl font-bold text-foreground sm:text-3xl">
               Generador de Reporte de Tiempos
+              <span className="text-xs font-normal text-muted-foreground">v{process.env.PROJECT_VERSION}</span>
             </h1>
             <p className="text-sm text-muted-foreground">
               Completa los pasos para generar tu reporte en PDF

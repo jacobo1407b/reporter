@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { DateRangePicker } from "@heroui/react";
 import { CardBody, CardHeader, Divider, Input, Card, Chip } from '@heroui/react';
-import { Building2, FileSpreadsheet, ShieldCheck, User } from 'lucide-react';
+import { Building2, FileSpreadsheet, ShieldCheck, User, Laptop } from 'lucide-react';
 import { useRegistro } from "../IndexDB";
 
 
@@ -10,6 +10,7 @@ type FormDataType = {
     cliente: string;
     proyecto: string;
     autorizo: string;
+    prsac: string;
     periodo: {
         start: number | null;
         end: number | null;
@@ -30,6 +31,7 @@ function FormData({ formData, setformData, isStep1Complete }: FormDataProps) {
                 ...formData,
                 name: data?.nombreEmpleado ?? "",
                 cliente: data?.nombreCliente ?? "",
+                prsac: data?.prsac ?? ""
             })
         })
     }, [])
@@ -96,31 +98,24 @@ function FormData({ formData, setformData, isStep1Complete }: FormDataProps) {
                         label="Periodo"
                         onChange={dateOnchange}
                     />
-                    {
-                        /**
-                         * 
-                         * <Select
-                        label="Mes"
-                        placeholder="Selecciona un mes"
-                        selectedKeys={mes ? [mes] : []}
-                        onSelectionChange={(keys) => {
-                            const selected = Array.from(keys)[0] as string
-                            setMes(selected || "")
-                            setError(null)
-                        }}
+
+                    <Input
+                        aria-label='Proyecto SAC'
+                        label="Proyecto SAC"
+                        name='prsac'
+                        placeholder="Ej: TOKS - SOPORTE"
+                        value={formData.prsac}
                         variant="bordered"
+                        startContent={
+                            <Laptop className="pointer-events-none h-4 w-4 shrink-0 text-muted-foreground" />
+                        }
                         isRequired
                         classNames={{
                             label: "text-foreground",
-                            value: "text-foreground",
+                            input: "text-foreground placeholder:text-muted-foreground",
                         }}
-                    >
-                        {MONTHS.map((m) => (
-                            <SelectItem key={m}>{m}</SelectItem>
-                        ))}
-                    </Select>
-                         */
-                    }
+                    />
+
                 </div>
 
                 <div className="flex gap-4">

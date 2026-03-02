@@ -28,7 +28,6 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
     doc.addFileToVFS("AptosNarrow.ttf", AptosNarrow);
     doc.addFont("AptosNarrow.ttf", "aptosnarro", "normal");
     doc.setFont("aptosnarro", "normal");
-
     const anio = new Date(data[0].fecha).getFullYear();
     const month = meses[new Date(data[0].fecha).getMonth()];
 
@@ -201,7 +200,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
         },
         alternateRowStyles: { fillColor: [255, 255, 255] }
     });
-    doc.addImage(signaturePreview, "JPG", startX + 100, startY - 15, 17, 13)
+    doc.addImage(signaturePreview, "JPG", startX + 120, startY - 15, 17, 13)
 
     autoTable(doc, {
         head: [["Elaboró", employe]],
@@ -268,7 +267,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
         const listDays = getWeekDatesSundayStart(anio, vl.semana);
         doc.addPage();
         let ejex = 19;
-        let ejey = 13;
+        let ejey = 5;
         doc.addImage(itg, "JPG", ejex, ejey, 25.5, 14.2)
         doc.addImage(opn, "PNG", ejex - 9, ejey + 12, 41, 13.3)
 
@@ -350,16 +349,18 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
                     if (data.column.index === 4 || data.column.index === 1) {
                         data.cell.styles.halign = "left";
                     }
+
                 }
                 if (data.section === "foot" && data.row.index === 0) {
                     data.cell.styles.fontSize = 9;
                     data.cell.styles.valign = "middle"
+                    data.cell.styles.cellPadding = data.column.index === 4 ? { right: 3, top: 0.5 } : { right: 0, top: 0.5 }
                     if (data.column.index > 4) {
                         data.cell.styles.halign = "center";
                     } else {
                         data.cell.styles.lineColor = [0, 0, 0]
                         data.cell.styles.lineWidth = {
-                            top: 0.3         // borde izquierdo
+                            top: 0.3
                         }
 
                     }
@@ -371,7 +372,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
                     data.cell.styles.halign = data.column.index === 0 ? "left" : "center";
                     data.cell.styles.fontStyle = data.column.index === 0 ? "bold" : "normal";
                     data.cell.styles.lineColor = [0, 0, 0];
-                    data.cell.styles.lineWidth = data.row.index === 3 && data.column.index == 1 ? { top: 0.2, bottom: 0.2 } : { top: 0, bottom: 0 }
+                    data.cell.styles.lineWidth = data.row.index === 1 && data.column.index > 4 ? { top: 0.3 } : { top: 0, bottom: 0 }
                 }
             },
             columnStyles: {
@@ -389,7 +390,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
         });
         const tempDoc: any = doc;
         const finalY = tempDoc.lastAutoTable.finalY; // ✅ este es el valor correcto
-        const x = 160
+        const x = 167
         const y = finalY - 40;
         doc.addImage(signaturePreview, "PNG", x, y, 20, 15);
     })
