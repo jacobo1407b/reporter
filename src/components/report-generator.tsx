@@ -60,7 +60,8 @@ export function ReportGenerator() {
     formData.proyecto.trim().length > 0 &&
     formData.autorizo.trim().length > 0 &&
     formData.periodo.start !== null &&
-    formData.periodo.end !== null
+    formData.periodo.end !== null &&
+    formData.prsac !== ""
 
   const currentStep = isStep1Complete
     ? signatureFiles.length > 0
