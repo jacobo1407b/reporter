@@ -50,9 +50,11 @@ function getISOWeek(date: Date): number {
 }
 
 export const handlerReaFiles = (files: File[], proyecto: string): Promise<DataExcel[]> => {
+
     return new Promise((resolve, reject) => {
         Promise.all(files.map((file) => ReadExcel(file, proyecto)))
             .then((results) => {
+
                 const allData: DataExcel[] = results.flat();
                 resolve(allData);
             })
@@ -66,6 +68,7 @@ const ReadExcel = (file: File, proyecto: string) => {
         reader.onload = (e) => {
             const data = new Uint8Array(e.target?.result as ArrayBuffer)
             const workbook = XLSX.read(data, { type: "array", cellDates: true });
+
             workbook.SheetNames.forEach((sheetName) => {
                 const worksheet = workbook.Sheets[sheetName]
                 const jsonData = XLSX.utils.sheet_to_json<(string | number)[]>(
@@ -74,20 +77,23 @@ const ReadExcel = (file: File, proyecto: string) => {
                         header: 1,
                     }
                 );
+
                 const rows: DataExcel[] = jsonData
                     .slice(1)
                     .map((row) => {
                         const semana = getISOWeek(new Date(row[0]));
+
                         return {
                             fecha: new Date(row[0]).getTime(),
                             semana: semana,
                             tiket: row[1] as string,
-                            proyecto: row[2] as string,
-                            description: row[3] as string,
-                            horas: row[5] as number,
-                            fase: row[6] as string
+                            proyecto: row[8] as string,
+                            description: row[2] as string,
+                            horas: row[4] as number,
+                            fase: row[5] as string
                         }
                     }).filter((row) => row.proyecto === proyecto);
+                console.log(rows)
                 resolve(rows);
             })
 

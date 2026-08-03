@@ -23,7 +23,7 @@ const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 
 
 export const dataToPdf = async (data: DataExcel[], autorize: string, employe: string, signaturePreview: string, client: string) => {
-
+    //console.log(data)
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     doc.addFileToVFS("AptosNarrow.ttf", AptosNarrow);
     doc.addFont("AptosNarrow.ttf", "aptosnarro", "normal");
