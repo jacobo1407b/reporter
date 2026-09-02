@@ -117,11 +117,12 @@ export function ReportGenerator() {
 
 
     try {
+
       await new Promise((resolve) => setTimeout(resolve, 500));
       const dataExcel = await handlerReaFiles(excelFiles, formData.prsac);
 
       const dataFilter = dataExcel.filter((i) => i.fecha >= (formData.periodo.start ?? 0) && i.fecha <= (formData.periodo.end ?? Date.now()))
-      dataToPdf(dataFilter, formData.autorizo, formData.name, signaturePreview || "", formData.cliente);
+      dataToPdf(dataFilter, formData.autorizo, formData.name, signaturePreview || "", formData.cliente, formData.proyecto);
 
     } catch (err) {
       console.error(err)

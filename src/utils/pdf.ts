@@ -22,7 +22,7 @@ type DataExcel = {
 const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 
-export const dataToPdf = async (data: DataExcel[], autorize: string, employe: string, signaturePreview: string, client: string) => {
+export const dataToPdf = async (data: DataExcel[], autorize: string, employe: string, signaturePreview: string, client: string, proyectoInput: string) => {
     //console.log(data)
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     doc.addFileToVFS("AptosNarrow.ttf", AptosNarrow);
@@ -264,6 +264,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
     });
 
     groupedData.forEach((vl) => {
+
         const listDays = getWeekDatesSundayStart(anio, vl.semana);
         doc.addPage();
         let ejex = 19;
@@ -287,7 +288,7 @@ export const dataToPdf = async (data: DataExcel[], autorize: string, employe: st
 
             startY: ejey,
             margin: { left: ejex },
-            body: [["Periodo", anio], ["Nombre Consultor", employe], ["Semana", `Semana ${vl.semana}`], ["Cliente", client], ["Proyecto", "Reingeniería Cadena de Suministro"]],
+            body: [["Periodo", anio], ["Nombre Consultor", employe], ["Semana", `Semana ${vl.semana}`], ["Cliente", client], ["Proyecto", proyectoInput]],
             columnStyles: {
                 0: { fillColor: [33, 92, 152], textColor: [255, 255, 255], minCellHeight: 5 }, // Primera columna
                 1: { fillColor: [255, 255, 255], textColor: [33, 92, 152] }  // Segunda columna
