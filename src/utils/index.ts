@@ -30,6 +30,20 @@ interface Actividad {
     horas: number;
     fase: string;
 }
+const normalize = (s: unknown) =>
+    String(s ?? "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+const COLUMN_ALIASES: Record<keyof Omit<DataExcel, "semana">, string[]> = {
+    fecha: ["fecha", "date"],
+    tiket: ["numero de ticket", "tiket"],
+    description: ["descripcion de la tarea o actividad", "description"],
+    horas: ["horas consumidas", "hours"],
+    fase: ["fase", "phase"],
+    proyecto: ["proyecto", "project"],
+};
 
 function getISOWeek(date: Date): number {
     const tmp = new Date(date.getTime());
@@ -54,7 +68,6 @@ export const handlerReaFiles = (files: File[], proyecto: string): Promise<DataEx
     return new Promise((resolve, reject) => {
         Promise.all(files.map((file) => ReadExcel(file, proyecto)))
             .then((results) => {
-
                 const allData: DataExcel[] = results.flat();
                 resolve(allData);
             })
@@ -63,6 +76,7 @@ export const handlerReaFiles = (files: File[], proyecto: string): Promise<DataEx
 }
 
 const ReadExcel = (file: File, proyecto: string) => {
+
     return new Promise<DataExcel[]>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -77,23 +91,37 @@ const ReadExcel = (file: File, proyecto: string) => {
                         header: 1,
                     }
                 );
+                const headers = (jsonData[0] ?? []).map(normalize);
+
+                const idx = {} as Record<keyof typeof COLUMN_ALIASES, number>;
+
+                for (const key of Object.keys(COLUMN_ALIASES) as (keyof typeof COLUMN_ALIASES)[]) {
+
+                    const i = headers.findIndex((h) => COLUMN_ALIASES[key].includes(normalize(h)));
+
+                    if (i === -1) {
+                        reject(new Error(`No se encontró la columna "${key}" en la hoja "${sheetName}"`));
+                        return;
+                    }
+                    idx[key] = i;
+                }
 
                 const rows: DataExcel[] = jsonData
                     .slice(1)
+                    .filter((row) => row[idx.fecha] != null)
                     .map((row) => {
-                        const semana = getISOWeek(new Date(row[0]));
-
+                        const fecha = new Date(row[idx.fecha]);
                         return {
-                            fecha: new Date(row[0]).getTime(),
-                            semana: semana,
-                            tiket: row[1] as string,
-                            proyecto: row[8] as string,
-                            description: row[2] as string,
-                            horas: row[4] as number,
-                            fase: row[5] as string
-                        }
-                    }).filter((row) => row.proyecto === proyecto);
-                console.log(rows)
+                            fecha: fecha.getTime(),
+                            semana: getISOWeek(fecha),
+                            tiket: row[idx.tiket] as string,
+                            proyecto: row[idx.proyecto] as string,
+                            description: row[idx.description] as string,
+                            horas: row[idx.horas] as number,
+                            fase: row[idx.fase] as string,
+                        };
+                    })
+                    .filter((row) => row.proyecto === proyecto);
                 resolve(rows);
             })
 
