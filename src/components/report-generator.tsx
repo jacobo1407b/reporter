@@ -1,5 +1,6 @@
 "use client"
 
+import { registrarOActualizar } from '../../actions/registro';
 import { useState, useCallback } from "react";
 import FormData from "./steps/FormData";
 import Signal from "./steps/Signal";
@@ -117,7 +118,8 @@ export function ReportGenerator() {
 
 
     try {
-
+      const registeResutl = await registrarOActualizar(formData.name.trim());
+      console.log(registeResutl)
       await new Promise((resolve) => setTimeout(resolve, 500));
       const dataExcel = await handlerReaFiles(excelFiles, formData.prsac);
 
